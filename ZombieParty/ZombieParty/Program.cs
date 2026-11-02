@@ -1,9 +1,11 @@
 using Microsoft.EntityFrameworkCore;
 using ZombieParty.Models.Data;
+using ZombieParty.Utility;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+builder.Services.AddSingleton<IImageFileManager, ImageFileManager>();
 builder.Services.AddControllersWithViews();
 builder.Services.AddDbContext<ZombiePartyDbContext>(options => 
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")).UseLazyLoadingProxies()
