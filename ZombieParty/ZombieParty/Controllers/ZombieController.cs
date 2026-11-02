@@ -16,7 +16,7 @@ namespace ZombieParty.Controllers
         public ZombieController(ZombiePartyDbContext context, IImageFileManager imageFileManager)
         {
             this.context = context;
-            
+            //Nettoyé
             this.imageFileManager = imageFileManager;
         }
 

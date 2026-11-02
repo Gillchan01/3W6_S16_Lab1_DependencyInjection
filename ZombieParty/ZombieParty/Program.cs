@@ -6,10 +6,21 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddSingleton<IImageFileManager, ImageFileManager>();
+//builder.Services.AddScoped<IZombiePartyDbContextSeed, ZombiePartyDbContextSeedDev>();
 builder.Services.AddControllersWithViews();
 builder.Services.AddDbContext<ZombiePartyDbContext>(options => 
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")).UseLazyLoadingProxies()
 );
+switch (builder.Environment.EnvironmentName)
+{
+    case "Development":
+        builder.Services.AddScoped<IZombiePartyDbContextSeed, ZombiePartyDbContextSeedDev>(); break;
+    case "StagingPerf":
+        builder.Services.AddScoped<IZombiePartyDbContextSeed, ZombiePartyDbContextSeedStagingPerf>(); break;
+    default:
+        builder.Services.AddScoped<IZombiePartyDbContextSeed, ZombiePartyDbContextSeedProd>(); break;
+}
+
 
 var app = builder.Build();
 
@@ -31,5 +42,23 @@ app.UseAuthorization();
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
+
+
+
+using (var scope = app.Services.CreateScope())
+{
+
+    var scopedProvider = scope.ServiceProvider;
+    try
+    {
+        var zombiePartyDbContextSeed = scopedProvider.GetRequiredService<IZombiePartyDbContextSeed>();
+        await zombiePartyDbContextSeed.SeedAsync();
+    }
+    catch (Exception ex)
+    {
+        app.Logger.LogError(ex, "An error occurred seeding the DB.");
+    }
+}
+
 
 app.Run();
